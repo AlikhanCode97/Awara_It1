@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>a5ef126c-7cbf-4253-b924-5ee6744be5df</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>AwaraIT.BCS.Infrastructure</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Common\BaseHttpClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\OrganizationServiceWrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\CaseCommentRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\ContactRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\CrmRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\EnvironmentVariableDefinitionRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\IncidentRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\LeadRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\LogRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\MarketingRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\PushMessageRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\RoleRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\RoutingElementRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\RoutingRuleElementRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\RoutingRulesSetRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\SMSMessageRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Repositories\Crm\SynchronizationWithExternalSystemTaskRepository.cs" />
+  </ItemGroup>
+</Project>

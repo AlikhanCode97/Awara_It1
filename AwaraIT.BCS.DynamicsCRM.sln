@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{6FCD30C2-4E1A-403B-A198-431C712C257B}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AwaraIT.BCS.Domain", "AwaraIT.BCS.Domain\AwaraIT.BCS.Domain.shproj", "{7D0FE37E-8A39-468B-9FE5-4EC53E0B094B}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AwaraIT.BCS.Application", "AwaraIT.BCS.Application\AwaraIT.BCS.Application.shproj", "{11E0B76A-AB4C-43DC-BABF-9F39D3781EA9}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "AwaraIT.BCS.Infrastructure", "AwaraIT.BCS.Infrastructure\AwaraIT.BCS.Infrastructure.shproj", "{A5EF126C-7CBF-4253-B924-5EE6744BE5DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwaraIT.BCS.ConsoleApp", "AwaraIT.BCS.ConsoleApp\AwaraIT.BCS.ConsoleApp.csproj", "{C08F1A2A-A27E-460B-ABA6-04AE53DAF131}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AwaraIT.BCS.Plugins2", "AwaraIT.BCS.Plugins\AwaraIT.BCS.Plugins2.csproj", "{F198BEAB-5DFA-4F79-9D04-6A137DCED57D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C08F1A2A-A27E-460B-ABA6-04AE53DAF131}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C08F1A2A-A27E-460B-ABA6-04AE53DAF131}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C08F1A2A-A27E-460B-ABA6-04AE53DAF131}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C08F1A2A-A27E-460B-ABA6-04AE53DAF131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F198BEAB-5DFA-4F79-9D04-6A137DCED57D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F198BEAB-5DFA-4F79-9D04-6A137DCED57D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F198BEAB-5DFA-4F79-9D04-6A137DCED57D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F198BEAB-5DFA-4F79-9D04-6A137DCED57D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C08F1A2A-A27E-460B-ABA6-04AE53DAF131} = {6FCD30C2-4E1A-403B-A198-431C712C257B}
+		{F198BEAB-5DFA-4F79-9D04-6A137DCED57D} = {6FCD30C2-4E1A-403B-A198-431C712C257B}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		AwaraIT.BCS.Application\AwaraIT.BCS.Application.projitems*{11e0b76a-ab4c-43dc-babf-9f39d3781ea9}*SharedItemsImports = 13
+		AwaraIT.BCS.Domain\AwaraIT.BCS.Domain.projitems*{7d0fe37e-8a39-468b-9fe5-4ec53e0b094b}*SharedItemsImports = 13
+		AwaraIT.BCS.Infrastructure\AwaraIT.BCS.Infrastructure.projitems*{a5ef126c-7cbf-4253-b924-5ee6744be5df}*SharedItemsImports = 13
+		AwaraIT.BCS.Application\AwaraIT.BCS.Application.projitems*{c08f1a2a-a27e-460b-aba6-04ae53daf131}*SharedItemsImports = 4
+		AwaraIT.BCS.Domain\AwaraIT.BCS.Domain.projitems*{c08f1a2a-a27e-460b-aba6-04ae53daf131}*SharedItemsImports = 4
+		AwaraIT.BCS.Infrastructure\AwaraIT.BCS.Infrastructure.projitems*{c08f1a2a-a27e-460b-aba6-04ae53daf131}*SharedItemsImports = 4
+		AwaraIT.BCS.Application\AwaraIT.BCS.Application.projitems*{f198beab-5dfa-4f79-9d04-6a137dced57d}*SharedItemsImports = 4
+		AwaraIT.BCS.Domain\AwaraIT.BCS.Domain.projitems*{f198beab-5dfa-4f79-9d04-6a137dced57d}*SharedItemsImports = 4
+		AwaraIT.BCS.Infrastructure\AwaraIT.BCS.Infrastructure.projitems*{f198beab-5dfa-4f79-9d04-6a137dced57d}*SharedItemsImports = 4
+	EndGlobalSection
+EndGlobal
