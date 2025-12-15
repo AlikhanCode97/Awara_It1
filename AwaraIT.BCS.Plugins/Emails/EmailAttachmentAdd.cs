@@ -1,4 +1,5 @@
 ﻿using AwaraIT.BCS.Application.Core;
+using AwaraIT.BCS.Domain.Models.Crm.EnvironmentVariables;
 using AwaraIT.BCS.Plugins.PluginExtensions;
 using AwaraIT.BCS.Plugins.PluginExtensions.Enums;
 using AwaraIT.BCS.Plugins.PluginExtensions.Interfaces;
@@ -16,8 +17,7 @@ namespace AwaraIT.BCS.Plugins2.Emails
 {
     public class EmailAttachmentAdd : PluginBase
     {
-        private readonly string flowUrl = "https://4bdff9edf2e9ef33ba314ad199dd94.17.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/309f51f6ca33492dae6724499e388596/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RCdsWDr5htYmoZ0jglL82eU526Nunwd-S5RUC00Dznw";
-        public EmailAttachmentAdd()
+         public EmailAttachmentAdd()
         {
             Subscribe
                 //.ToMessage("Send")
@@ -37,13 +37,34 @@ namespace AwaraIT.BCS.Plugins2.Emails
             var service = wrapper.GetOrganizationService(null);
             var logger = new Logger(service);
 
-            
+            string flowUrl = CrmEnvironmentVariables.GetSharepointPathUrl(service, "awr_SharePointGetFileContent");
+
+
             try
             {
                 var target = (Entity)ctx.InputParameters["Target"];
-                var emailRef = service.Retrieve("email", target.Id, new ColumnSet("awr_sharepointfiles"));
 
-                string spFilesJson = emailRef.GetAttributeValue<string>("awr_sharepointfiles");
+                EntityReference regarding = null;
+
+                if (target.Contains("regardingobjectid"))
+                {
+                    regarding = target.GetAttributeValue<EntityReference>("regardingobjectid");
+                }
+                else if (ctx.PrimaryEntityId != Guid.Empty)
+                {
+                    var email = service.Retrieve(
+                        "email",
+                        ctx.PrimaryEntityId,
+                        new ColumnSet("regardingobjectid")
+                    );
+                    regarding = email.GetAttributeValue<EntityReference>("regardingobjectid");
+                }
+                if (regarding == null || regarding.LogicalName != "incident") return;
+
+
+                if (!target.Contains("awr_sharepointfiles")) return;
+
+                string spFilesJson = target.GetAttributeValue<string>("awr_sharepointfiles");
 
                 List<string> fileIds = System.Text.Json.JsonSerializer.Deserialize<List<string>>(spFilesJson);
                 if (fileIds == null || fileIds.Count == 0) return;
@@ -74,17 +95,36 @@ namespace AwaraIT.BCS.Plugins2.Emails
 
                             string filename = ExtractSafeFilename(fileId);
 
+                            // --- Check if attachment already exists ---
+                            var existingQuery = new QueryExpression("activitymimeattachment")
+                            {
+                                ColumnSet = new ColumnSet("activitymimeattachmentid")
+                            };
+                            existingQuery.Criteria.AddCondition("activityid", ConditionOperator.Equal, ctx.PrimaryEntityId);
+                            existingQuery.Criteria.AddCondition("filename", ConditionOperator.Equal, filename);
+
+                            var existing = service.RetrieveMultiple(existingQuery);
+
+                            if (existing.Entities.Count > 0)
+                            {
+                                continue;
+                            }
+
+                            // ---  Create new attachment ---
                             var attach = new Entity("activitymimeattachment");
-                            attach["activityid"] = emailRef.ToEntityReference();
+                            attach["activityid"] = new EntityReference("email", ctx.PrimaryEntityId);
                             attach["filename"] = filename;
                             attach["body"] = base64;
                             attach["mimetype"] = mime;
 
                             service.Create(attach);
+
                         }
                         catch (Exception exFile)
                         {
                             logger.ERROR(exFile, $"Error processing fileId {fileId}", entityType: target.LogicalName, entityid: target.Id);
+
+                            throw new InvalidPluginExecutionException($"EmailAttachmentAdd failed: {exFile.Message}");
                         }
                     }
                 }
@@ -100,11 +140,10 @@ namespace AwaraIT.BCS.Plugins2.Emails
         private static string ExtractSafeFilename(string fileId)
         {
             string decoded = Uri.UnescapeDataString(fileId);
-            decoded = Uri.UnescapeDataString(decoded); // double decode
+            decoded = Uri.UnescapeDataString(decoded);
 
             string filename = decoded.Substring(decoded.LastIndexOf('/') + 1);
 
-            // Enforce CRM limit 255 chars
             if (filename.Length > 255)
             {
                 string ext = "";

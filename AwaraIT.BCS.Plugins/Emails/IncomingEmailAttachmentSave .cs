@@ -1,24 +1,27 @@
 ﻿using AwaraIT.BCS.Application.Core;
+using AwaraIT.BCS.Domain.Models.Crm.EnvironmentVariables;
 using AwaraIT.BCS.Plugins.PluginExtensions;
 using AwaraIT.BCS.Plugins.PluginExtensions.Enums;
 using AwaraIT.BCS.Plugins.PluginExtensions.Interfaces;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
-
 namespace AwaraIT.BCS.Plugins2.Emails
 {
     public class IncomingEmailAttachmentSave : PluginBase
     {
-        private readonly string flowUrl =
-            "https://4bdff9edf2e9ef33ba314ad199dd94.17.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/adadb9de9c5749618b93c93f85669d81/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=fLxddIHA4xxGwRg1nhi4oqBmjH0QNS9VWLhY-h-R4hg";
-
         public IncomingEmailAttachmentSave()
         {
             Subscribe
-                .ToMessage(CrmMessage.Create)
+                //.ToMessage(CrmMessage.Create)
+                //.ForEntity("email")
+                //.When(PluginStage.PostOperation)
+                //.Execute(Execute);
+                .ToMessage(CrmMessage.Update)
                 .ForEntity("email")
                 .When(PluginStage.PostOperation)
                 .Execute(Execute);
@@ -30,15 +33,23 @@ namespace AwaraIT.BCS.Plugins2.Emails
             var service = wrapper.GetOrganizationService(null);
             var logger = new Logger(service);
 
+            if (ctx.Depth > 1)
+                return;
+
+            string EmailDownloadAttachment = CrmEnvironmentVariables.GetSharepointPathUrl(service, "awr_SharePointdownloadfile");
+            string CaseUpdateSharePoint = CrmEnvironmentVariables.GetSharepointPathUrl(service, "awr_CaseSharePointfilesUpdate");
+
             try
             {
                 var email = service.Retrieve("email", ctx.PrimaryEntityId,
                     new ColumnSet("subject", "directioncode", "regardingobjectid"));
 
-                bool incoming = email.GetAttributeValue<bool>("directioncode");
-                if (!incoming) return;
+                var regarding = email.GetAttributeValue<EntityReference>("regardingobjectid");
+                if (regarding == null || regarding.LogicalName != "incident") return;
+                bool isOutgoing = email.GetAttributeValue<bool>("directioncode");
+                if (isOutgoing) return;
 
-                string folderPath = ResolveFolderPath(email, service, logger);
+                string folderPath = ResolveFolderPath(email, service, logger, regarding);
 
                 var query = new QueryExpression("activitymimeattachment")
                 {
@@ -50,6 +61,8 @@ namespace AwaraIT.BCS.Plugins2.Emails
 
                 if (attachments.Entities.Count == 0) return;
 
+                var savedFiles = new List<string>();
+
                 foreach (var att in attachments.Entities)
                 {
                     try
@@ -59,7 +72,11 @@ namespace AwaraIT.BCS.Plugins2.Emails
                                           ?.Replace("\r", "")
                                           ?.Replace("\n", "");
 
-                        UploadToSharePoint(folderPath, filename, base64);
+                        if (string.IsNullOrWhiteSpace(base64)) continue;
+
+                        UploadToSharePoint(folderPath, filename, base64, EmailDownloadAttachment);
+
+                        savedFiles.Add($"{folderPath}/{filename}");
 
                         service.Delete("activitymimeattachment", att.Id);
                     }
@@ -68,7 +85,17 @@ namespace AwaraIT.BCS.Plugins2.Emails
                         logger.ERROR(exAtt, $"Failed Processing Attachment ID: {att.Id}", "email", email.Id);
                     }
                 }
+                if (savedFiles.Count == 0) return;
+                if (savedFiles.Count > 0)
+                {
+                    var updateEmail = new Entity("email", email.Id);
+                    updateEmail["awr_sharepointfiles"] =
+                        System.Text.Json.JsonSerializer.Serialize(savedFiles);
 
+                    service.Update(updateEmail);
+                }
+
+                CallCaseUpdateFlow(regarding.Id, CaseUpdateSharePoint);
             }
             catch (Exception ex)
             {
@@ -77,12 +104,9 @@ namespace AwaraIT.BCS.Plugins2.Emails
             }
         }
 
-        private string ResolveFolderPath(Entity email, IOrganizationService service, Logger logger)
+        private string ResolveFolderPath(Entity email, IOrganizationService service, Logger logger, EntityReference regarding)
         {
-            var regarding = email.GetAttributeValue<EntityReference>("regardingobjectid");
 
-            if (regarding != null && regarding.LogicalName == "incident")
-            {
                 Guid caseId = regarding.Id;
 
                 var caseEntity = service.Retrieve("incident", caseId, new ColumnSet("title"));
@@ -91,13 +115,10 @@ namespace AwaraIT.BCS.Plugins2.Emails
                 string folder = $"/incident/{title}_{caseId.ToString().Replace("-", "").ToUpper()}";
 
                 return folder;
-            }
-
-            string subject = email.GetAttributeValue<string>("subject") ?? "NoSubject";
-            return $"/email/{subject}_{email.Id.ToString().Replace("-", "").ToUpper()}";
+            
         }
 
-        private void UploadToSharePoint(string folder, string fileName, string base64)
+        private void UploadToSharePoint(string folder, string fileName, string base64 , string flowUrl)
         {
             var payload = new
             {
@@ -117,5 +138,29 @@ namespace AwaraIT.BCS.Plugins2.Emails
                     throw new Exception($"SharePoint upload failed: {resp.StatusCode}");
             }
         }
+
+        private void CallCaseUpdateFlow(Guid caseId, string flowUrl)
+        {
+            var payload = new
+            {
+                case_id = caseId.ToString()
+            };
+
+            using (var client = new HttpClient())
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = client.PostAsync(flowUrl, content).Result;
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidPluginExecutionException(
+                        $"Case SharePoint update Flow failed. Status: {response.StatusCode}"
+                    );
+                }
+            }
+        }
+
     }
 }

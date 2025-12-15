@@ -34,25 +34,33 @@ namespace AwaraIT.BCS.Plugins2.Emails
             try
             {
                 var target = ctx.InputParameters.Contains("Target") ? ctx.InputParameters["Target"] as Entity : null;
-                if (!target.Contains("statuscode")) return;
 
-                var email = service.Retrieve("email", ctx.PrimaryEntityId,
-                    new ColumnSet("statuscode", "directioncode"));
+                EntityReference regarding = null;
 
-                bool isIncoming = email.GetAttributeValue<bool>("directioncode");
-                if (isIncoming)
+                if (!target.Contains("statuscode") && !target.Contains("statecode"))
                     return;
 
-                int status = email.GetAttributeValue<OptionSetValue>("statuscode").Value;
 
-                if (status != 3 && status != 5)
-                    return;
+                var email = service.Retrieve(
+                    "email",
+                    ctx.PrimaryEntityId,
+                    new ColumnSet("directioncode", "regardingobjectid", "statuscode")
+                );
+
+                int status = email.GetAttributeValue<OptionSetValue>("statuscode")?.Value ?? -1;
+                if (status != 3 && status != 5) return;
+
+                regarding = email.GetAttributeValue<EntityReference>("regardingobjectid");
+                if (regarding == null || regarding.LogicalName != "incident") return;
+
+                bool isOutgoing = email.GetAttributeValue<bool>("directioncode");
+                if (!isOutgoing)return;
 
                 var query = new QueryExpression("activitymimeattachment")
                 {
                     ColumnSet = new ColumnSet("activitymimeattachmentid", "filename")
                 };
-                query.Criteria.AddCondition("activityid", ConditionOperator.Equal, email.Id);
+                query.Criteria.AddCondition("activityid", ConditionOperator.Equal, target.Id);
 
                 var attachments = service.RetrieveMultiple(query);
 

@@ -14,19 +14,13 @@ namespace AwaraIT.BCS.ConsoleApp.Actions
             "https://4bdff9edf2e9ef33ba314ad199dd94.17.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/309f51f6ca33492dae6724499e388596/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=RCdsWDr5htYmoZ0jglL82eU526Nunwd-S5RUC00Dznw";
 
 
-        // -------------------------------
-        // FILENAME EXTRACTION FUNCTION
-        // -------------------------------
         private static string ExtractSafeFilename(string fileId)
         {
-            // decode twice because SharePoint stores %25d0%25xx patterns
             string decoded = Uri.UnescapeDataString(fileId);
             decoded = Uri.UnescapeDataString(decoded);
 
-            // extract filename after last slash
             string filename = decoded.Substring(decoded.LastIndexOf('/') + 1);
 
-            // enforce CRM limit 255 characters
             if (filename.Length > 255)
             {
                 string ext = "";
@@ -48,7 +42,6 @@ namespace AwaraIT.BCS.ConsoleApp.Actions
             {
                 Console.WriteLine($"Retrieving email: {emailId}");
 
-                // Retrieve email
                 var email = service.Retrieve(
                     "email",
                     emailId,
